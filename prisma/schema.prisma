@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String           @id @default(cuid())
+  email              String           @unique
+  name               String?
+  image              String?
+  googleRefreshToken String?
+  driveFileId        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  memberships        RoomMembership[]
+  splitRequestsMade  SplitRequest[]   @relation("SplitRequester")
+  splitRequestsTo    SplitRequest[]   @relation("SplitRecipient")
+  benchmarkOptIn     Boolean          @default(false)
+}
+
+model Room {
+  id          String           @id @default(cuid())
+  name        String
+  inviteCode  String           @unique
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  memberships RoomMembership[]
+  splits      SplitRequest[]
+}
+
+model RoomMembership {
+  id        String   @id @default(cuid())
+  userId    String
+  roomId    String
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+}
+
+model SplitRequest {
+  id          String   @id @default(cuid())
+  roomId      String
+  requesterId String
+  recipientId String
+  amount      Decimal  @db.Decimal(10, 2)
+  note        String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  recipient   User     @relation("SplitRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  requester   User     @relation("SplitRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model CategoryAggregate {
+  id          String   @id @default(cuid())
+  categoryId  String
+  month       String
+  totalAmount Decimal  @db.Decimal(10, 2) @default(0)
+  userCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([categoryId, month])
+}
