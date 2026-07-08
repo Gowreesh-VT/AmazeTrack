@@ -13,6 +13,8 @@ const updateSchema = z.object({
   note: z.string().max(160).optional(),
   spentAt: z.string().datetime().optional(),
   splitRequestId: z.string().optional(),
+  isAmortized: z.boolean().optional(),
+  amortizeMonths: z.number().int().positive().optional(),
 });
 
 async function loadUserDrive(userId: string) {
