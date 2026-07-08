@@ -92,6 +92,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"home" | "budgets" | "splits" | "analytics" | "add">("home");
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [form, setForm] = useState<TransactionForm>({
     amount: "",
@@ -2180,7 +2181,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isAmortized: false,
       amortizeMonths: "12",
     });
-    setActiveView("add");
+    setIsAddExpenseOpen(true);
   }
 
   function startEdit(transaction: Transaction) {
@@ -2195,7 +2196,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isAmortized: transaction.isAmortized ?? false,
       amortizeMonths: String(transaction.amortizeMonths ?? 12),
     });
-    setActiveView("add");
+    setIsAddExpenseOpen(true);
   }
 
   // 1. Repeating Transaction Templates CRUD
@@ -2753,7 +2754,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updatedAt: timestamp,
       };
     });
-    setActiveView("home");
+    setIsAddExpenseOpen(false);
     setSyncing(true);
     setError(null);
 
@@ -3274,6 +3275,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const contextValue = {
     showOnboarding, handleOnboardingComplete, setDriveData, setShowOnboarding,
     activeView, setActiveView,
+    isAddExpenseOpen, setIsAddExpenseOpen,
     showSettings, setShowSettings,
     settingsTab, setSettingsTab,
     importModalType, setImportModalType,

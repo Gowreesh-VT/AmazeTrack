@@ -16,7 +16,6 @@ function AppContent() {
   return (
     <AppShell>
       {activeView === "home" ? <HomeView /> : null}
-      {activeView === "add" ? <AddTransactionView /> : null}
       {activeView === "analytics" ? <AnalyticsView /> : null}
       {activeView === "budgets" ? <BudgetsView /> : null}
       {activeView === "splits" ? <SplitsView /> : null}

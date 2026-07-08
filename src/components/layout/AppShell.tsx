@@ -5,6 +5,7 @@ import { MobileNav } from './MobileNav';
 import { useAppContext } from '@/lib/AppContext';
 import { OnboardingFlow } from '@/components/features/OnboardingFlow';
 import { SettingsModal } from '@/components/features/SettingsModal';
+import { AddTransactionView } from '@/components/features/AddTransactionView';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -15,7 +16,8 @@ export function AppShell({ children }: AppShellProps) {
     isSidebarOpen, 
     session,
     showOnboarding,
-    handleOnboardingComplete
+    handleOnboardingComplete,
+    isAddExpenseOpen
   } = useAppContext();
 
   return (
@@ -45,6 +47,7 @@ export function AppShell({ children }: AppShellProps) {
         <MobileNav />
       </div>
       <SettingsModal />
+      {isAddExpenseOpen && <AddTransactionView />}
     </>
   );
 }
