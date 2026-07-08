@@ -1,5 +1,29 @@
 import { Transaction, Category, Budget, AllowanceConfig } from "./types";
 
+// Utility to expand amortized transactions into their virtual chunks
+export function flattenAmortizedTransactions(transactions: Transaction[]): Transaction[] {
+  const flattened: Transaction[] = [];
+  for (const t of transactions) {
+    if (t.isAmortized && t.amortizeMonths && t.amortizeMonths > 1) {
+      const splitAmount = t.amount / t.amortizeMonths;
+      const startDate = new Date(t.spentAt);
+      for (let i = 0; i < t.amortizeMonths; i++) {
+        const virtualDate = new Date(startDate.getFullYear(), startDate.getMonth() + i, startDate.getDate());
+        flattened.push({
+          ...t,
+          id: `${t.id}-amortized-${i}`,
+          amount: splitAmount,
+          spentAt: virtualDate.toISOString(),
+          note: `${t.note || "Amortized expense"} (${i + 1}/${t.amortizeMonths})`,
+        });
+      }
+    } else {
+      flattened.push(t);
+    }
+  }
+  return flattened;
+}
+
 // Helper to check if note matches outside eating keywords
 export function isOutsideEating(note: string | undefined): boolean {
   if (!note) return false;
@@ -37,6 +61,8 @@ export function getTrendData(
   days: number,
   periodType: "daily" | "weekly" | "monthly"
 ): TrendPoint[] {
+  transactions = flattenAmortizedTransactions(transactions);
+  
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
@@ -149,6 +175,7 @@ export function getCategoryBreakdown(
   categories: Category[],
   monthStr: string // YYYY-MM
 ): CategoryBreakdownItem[] {
+  transactions = flattenAmortizedTransactions(transactions);
   const monthTxs = transactions.filter(
     (t) =>
       !t.deletedAt &&
@@ -186,6 +213,7 @@ export type HeatmapPoint = {
 };
 
 export function getCalendarHeatmap(transactions: Transaction[], year: number, month: number): HeatmapPoint[] {
+  transactions = flattenAmortizedTransactions(transactions);
   const points: HeatmapPoint[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
@@ -239,6 +267,7 @@ export type WeekdayPoint = {
 };
 
 export function getDayOfWeekPattern(transactions: Transaction[]): WeekdayPoint[] {
+  transactions = flattenAmortizedTransactions(transactions);
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const counts: Record<number, Set<string>> = { 0: new Set(), 1: new Set(), 2: new Set(), 3: new Set(), 4: new Set(), 5: new Set(), 6: new Set() };
   const sums: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
@@ -274,6 +303,7 @@ export type MessRatioData = {
 };
 
 export function getMessVsOutsideFoodRatio(transactions: Transaction[], monthStr: string): MessRatioData {
+  transactions = flattenAmortizedTransactions(transactions);
   const monthTxs = transactions.filter(
     (t) =>
       !t.deletedAt &&
@@ -313,6 +343,7 @@ export type NoteRanking = {
 };
 
 export function getTopMerchants(transactions: Transaction[], limit = 5): NoteRanking[] {
+  transactions = flattenAmortizedTransactions(transactions);
   const noteGroups: Record<string, { count: number; total: number }> = {};
 
   const validTxs = transactions.filter(
@@ -380,6 +411,7 @@ export function getSemesterComparison(
   transactions: Transaction[],
   allowanceConfig: AllowanceConfig | undefined
 ): SemesterComparison | null {
+  transactions = flattenAmortizedTransactions(transactions);
   if (!allowanceConfig || allowanceConfig.cycleType !== "semester") return null;
 
   const currentStart = new Date(allowanceConfig.cycleStart);
@@ -428,6 +460,7 @@ export function getBudgetActualCumulative(
   budget: Budget,
   allCategories: Category[]
 ): CumulativePoint[] {
+  transactions = flattenAmortizedTransactions(transactions);
   const start = new Date(budget.periodStart);
   start.setHours(0, 0, 0, 0);
   const end = new Date(budget.periodEnd);
@@ -543,6 +576,7 @@ export type ForecastResult = {
 };
 
 export function getForecast(transactions: Transaction[], totalLimit = 0): ForecastResult {
+  transactions = flattenAmortizedTransactions(transactions);
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();

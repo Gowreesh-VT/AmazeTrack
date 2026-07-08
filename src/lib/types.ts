@@ -13,6 +13,10 @@ export type Transaction = {
   deletedAt?: string;
   splitRequestId?: string;
   recurringTemplateId?: string;
+  location?: string;
+  locationCoords?: { lat: number; lng: number };
+  isAmortized?: boolean;
+  amortizeMonths?: number;
 };
 
 export type Category = {
@@ -85,6 +89,13 @@ export type DriveData = {
     periodStart: string;
     byCategory: Record<string, number>;
   } | null;
+  preferences?: {
+    currency: string;
+    currencySymbol: string;
+    locale?: string;
+    monthlyBudget?: number;
+    onboardingComplete?: boolean;
+  };
   updatedAt: string;
 };
 
@@ -118,6 +129,10 @@ export function emptyDriveData(userId: string): DriveData {
     goals: [],
     subscriptions: [],
     recurringTemplates: [],
+    preferences: {
+      currency: "INR",
+      currencySymbol: "₹",
+    },
     updatedAt: timestamp,
   };
 }
