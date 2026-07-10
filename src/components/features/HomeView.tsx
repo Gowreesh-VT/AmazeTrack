@@ -46,6 +46,7 @@ export function HomeView() {
 
   // Search State
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [showAllRecents, setShowAllRecents] = React.useState(false);
 
   // Calculate 7-Day Trend Points for Mini Analytics
   const trendPoints = React.useMemo(() => {
@@ -200,10 +201,13 @@ export function HomeView() {
             {/* Main Cards (Spend & Wallet) */}
             <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${hasSidebarContent ? 'lg:col-span-8' : ''}`}>
               {/* Hero Spend Card with Mini Trend Line Chart on the right */}
-          <div className="relative overflow-hidden rounded-3xl p-6 bg-[#2a2321] dark:bg-[#1a1715] border border-white/5 shadow-xl flex items-center justify-between gap-4">
+          <div className="relative overflow-hidden rounded-[2rem] p-6 bg-[#2a2321] dark:bg-[#1a1715] border border-white/5 shadow-xl flex items-center justify-between gap-4">
             
             <div className="flex-1 min-w-0 z-10">
-              <p className="text-xl font-black text-white tracking-tight mb-2">Spent This Month</p>
+              <p className="text-[10px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-1">Spent This Month</p>
+              <p className="text-3xl font-black text-white tracking-tight">
+                {formatCurrency(monthTotal, currencySymbol)}
+              </p>
               <p className="text-[11px] font-semibold text-zinc-400 mt-2 flex items-center gap-1.5">
                 {percentChange !== null ? (
                   <span className={percentChange > 0 ? "text-rose-500" : "text-emerald-500"}>
@@ -233,10 +237,20 @@ export function HomeView() {
           </div>
 
           {/* Primary Account Card (HDFC bank layout style) */}
-          <div className="bg-[#1c1c1e] dark:bg-card border border-white/5 rounded-3xl p-5 flex flex-col gap-5 relative overflow-hidden group">
+          <div className="bg-[#1c1c1e] dark:bg-card border border-white/5 rounded-[2rem] p-6 flex flex-col gap-5 relative overflow-hidden group">
             {/* Subtle background pattern/gradient matching screenshot vibe */}
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent pointer-events-none"></div>
             
+            {/* Split branch watermark badge at top right */}
+            <div className="absolute right-5 top-5 w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-zinc-400">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="6" y1="3" x2="6" y2="15"></line>
+                <circle cx="18" cy="6" r="3"></circle>
+                <circle cx="6" cy="18" r="3"></circle>
+                <path d="M18 9a9 9 0 0 1-9 9"></path>
+              </svg>
+            </div>
+
             <div className="flex items-start justify-between relative z-10">
               <div className="flex flex-col gap-4">
                 <div className="w-12 h-12 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center font-bold text-xl select-none border border-blue-500/30">
@@ -411,7 +425,11 @@ export function HomeView() {
                   );
                 });
 
-                filteredTxns.slice(0, searchQuery.trim() ? 100 : 20).forEach((t: any) => {
+                const txnsToDisplay = showAllRecents 
+                  ? (searchQuery.trim() ? filteredTxns.slice(0, 100) : filteredTxns.slice(0, 20))
+                  : filteredTxns.slice(0, 4);
+
+                txnsToDisplay.forEach((t: any) => {
                   const d = new Date(t.spentAt); d.setHours(0,0,0,0);
                   if (d.getTime() === now.getTime()) groups[0].txns.push(t);
                   else if (d.getTime() === yesterday.getTime()) groups[1].txns.push(t);
@@ -436,6 +454,18 @@ export function HomeView() {
                         </div>
                       </div>
                     ))}
+                    
+                    {filteredTxns.length > 4 && (
+                      <div className="flex justify-center mt-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowAllRecents(!showAllRecents)}
+                          className="px-6 py-2.5 rounded-2xl bg-zinc-150 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/[0.08] text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer shadow-sm hover:scale-[1.01] active:scale-[0.99]"
+                        >
+                          {showAllRecents ? "Show Less" : "Show Recents"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
